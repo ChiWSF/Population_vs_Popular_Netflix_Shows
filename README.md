@@ -12,3 +12,10 @@ Then I compared the most popular shows with different demongraphics/country to t
 The result shows that diverse shows are drawing more viwership than a tipical mostly White Americans lead shows.
 This prove that the agenda isn't to push a certain demongraphic/country, it's just the agenda about attracting more subscription golbally.
 
+Data Sources
+
+Country Population:[TheWorldBank](https://data.worldbank.org/indicator/SP.POP.TOTL) Date:2020
+
+LGBTQ+ Populatiopn:[Ipsos](https://www.ipsos.com/en/lgbt-pride-2021-global-survey-points-generation-gap-around-gender-identity-and-sexual-attraction) Date:2021
+
+Shows Popularity:[Netflix](https://top10.netflix.com/) Date:Jun28,2021toMar27,2022
