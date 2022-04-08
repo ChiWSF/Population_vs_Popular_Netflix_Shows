@@ -17,8 +17,8 @@ Excel, Microsoft SQL Server Management Studio, Tableau.
 
 Data Sources
 
-Country Population:[TheWorldBank](https://data.worldbank.org/indicator/SP.POP.TOTL) Date:2020
+Country Population:[TheWorldBank](https://data.worldbank.org/indicator/SP.POP.TOTL) Date: 2020
 
-LGBTQ+ Populatiopn:[Ipsos](https://www.ipsos.com/en/lgbt-pride-2021-global-survey-points-generation-gap-around-gender-identity-and-sexual-attraction) Date:2021
+LGBTQ+ Populatiopn:[Ipsos](https://www.ipsos.com/en/lgbt-pride-2021-global-survey-points-generation-gap-around-gender-identity-and-sexual-attraction) Date: 2021
 
-Shows Popularity:[Netflix](https://top10.netflix.com/) Date:Jun28,2021toMar27,2022
+Shows Popularity:[Netflix](https://top10.netflix.com/) Date: Jun28, 2021 to Mar27, 2022
