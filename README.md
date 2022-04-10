@@ -12,8 +12,8 @@ Then I compared the most popular shows with different demongraphics/country to t
 The result shows that diverse shows are drawing more viwership than a typical mostly White Americans lead shows.
 This proves that the agenda isn't to push a certain demongraphic/country, it's just the agenda about attracting more subscription golbally.
 
-Toos used:
-Excel, Microsoft SQL Server Management Studio, Tableau. 
+Tools used:
+R Studio, Microsoft SQL Server Management Studio, Tableau, Excel. 
 
 Data Sources
 
