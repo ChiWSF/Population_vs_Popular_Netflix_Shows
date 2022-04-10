@@ -1,0 +1,224 @@
+### Data celaning and maipulation for Netflix shows
+
+library('tidyverse')
+
+#Add Netflix dataset as data frame into the R Environment window
+all_week_global_shows <- read.csv('all_weeks_global.csv')
+
+#Filter out the columns and data I don't need
+all_week_global_shows <- all_weeks_global %>%
+select(category, show_title, season_title, weekly_hours_viewed) %>%
+filter(category == 'TV (English)'| category == 'TV (Non-English)')
+  
+#See if there's any null values
+is.na(all_week_global_shows)
+which(is.na(all_week_global_shows))
+
+#There's no null values but there are "N/A" values in the season title column
+which(grepl('N/A', all_week_global_shows$season_title))
+
+#Using mutate and if_else to get rid of "N/A" season titles and use show title insted
+global_shows <- all_week_global_shows %>%
+  mutate(season_title = if_else(season_title == 'N/A', show_title, season_title))
+
+#Drop the columns "category" and "show_title", then rename "season_title" as "show_title"
+global_shows$category <- NULL
+global_shows$show_title <- NULL
+shows <- rename(global_shows, show_title = season_title)
+
+#Calculate the cumulative weekly hours viewed for each show, the arrange in descending order with the top 100 shows
+top_100_hours_viewed <- shows %>%
+  group_by(show_title) %>%
+  summarise(total_viewed = sum(weekly_hours_viewed)) %>%
+  arrange(desc(total_viewed)) %>%
+  head(100)
+
+#Add two new columns intp the table by using mutate, and add in values into the new columns
+top_100_shows <- top_100_hours_viewed %>%
+  mutate(Country = NA, Demongraphic = NA)
+top_100_shows[1, 3] = 'Korea'
+top_100_shows[1, 4] = 'Non White leads'
+
+#I add the rest of the info on Exiel, it's eisier to do it on Exiel than using R studio since the data only contains 100 shows.
+shows_demongraphic <- top_100_shows
+
+#Then I copy "top_100_shows" data frame as "shows_demongraphic", add LGBTQ+ in the country coulumn for certain shows for my vitulaization process later
+shows_demongraphic <- top_100_shows %>%
+  [10, 3] = 'LGBTQ+'
+
+### Data cleaning and manipulation for world population
+
+#Add world population dataset into the R Environment window
+world_population_2020 <- read.csv('world_population_2020.csv')
+
+#Try to view the world population 2020 dataset, there're too many columns that I can't view all the names
+#I use colnames function to get all the column names.
+View(world_population_2020)
+colnames(world_population_2020)
+
+#Take the columns I need for this project
+world_population <- world_population_2020 %>%
+  select(Country.Name, X2020)
+
+#Add the LGBTQ+ and the population into the dataset
+world_population[267, 1] = 'LGBTQ+'
+world_population[267, 2] = round(world_population[260, 2 * 0.09], digits = 0)
+
+#Got an error from adding the population into the dataset. Instead I select the World population and calculate it then add it in.
+world_population %>%
+  subset(Country.Name == 'World')
+round(7761620146*0.09, digits = 0)
+world_population[267, 2] = '698545813'
+
+#Rename column "X2020" to "Population", and try to find any null values in the dataset.
+#After I checked, tdhe data that contains null vlaues aren't needed for my analysis, so I ignore them.
+Population_2020 <- world_population %>%
+  rename(Population = X2020)
+is.na(Population)
+which(is.na(Population))
+
+###Merging two data frames
+
+#First I rename Korea, Rep. to North Korea, so the two data frames will have the same value
+world_population [127, 1] = 'North Korea'
+
+#I change Country.Name column in Population to Country, so the two data farmes will have the same colomn as well
+Population_2020 <- Population_2020 %>%
+  rename(Country = Country.Name)
+
+#Use left_join to merge the two data frames
+show_population <- left_join(shows_demongraphic, Population_2020, by = 'Country')
+
+#I only going to use the most popular shows of each demongraphic to make the comparison visualization
+#I can't figure out a way to select the show_title, because there're ":" in them, so I selcet they total_viewed instead
+keep_shows <- c('2282020000', '905230000', '663240000', '655510000', '447750000')
+show_population <- filter(show_population, total_viewed %in% keep_shows)
+
+#Change the population column's data type from chr to num
+show_population$Population = as.numeric(as.character(show_population$Population))
+
+###Create visualization for the top 100 Netflix shows
+top_shows_bar <- ggplot(data = top_100_shows) +
+  geom_bar(mapping = aes(x = total_viewed,
+                         y = reorder(show_title, (total_viewed)),
+                         fill = Demongraphic), stat = 'identity') +
+  geom_text(aes(x = total_viewed,
+                y = reorder(show_title, (total_viewed)),
+                label = Country),
+            hjust = 0,
+            size = 2.5)
+
+# Add a title and change the lables for the x, y axies
+top_shows_bar <- top_shows_bar +
+  ggtitle('Top 100 Netflix Shows') +
+  theme(plot.title = element_text(color = 'black', size = '18', face = 'bold', vjust = 1, hjust = 0.5))
+
+# Ajust x-axis value to show the full scale using the scales pakacge
+library(scales)
+top_shows_bar <- top_shows_bar +
+  scale_x_continuous(labels = comma)
+
+# Change the axis y texts' size.
+top_shows_bar <- top_shows_bar +
+  theme(axis.text.y = element_text(size = 7))
+
+###Creat visualization for population and popular Netflix shows comparison
+Bar_one <- ggplot(data = show_population) +
+  geom_bar(mapping = aes(x = reorder(show_title, (-total_viewed)),
+                         y = total_viewed,
+                         fill = Country), stat = 'identity')
+
+Bar_two <- ggplot(data = show_population) +
+  geom_bar(mapping = aes(x = Country,
+                         y = Population,
+                         fill = Country), stat = 'identity')
+
+#Change the titles with lines so that they won't overlap each other
+show_population[1, 1] = 'Squid Game:\nSeason 1'
+show_population[2, 1] = 'Money Heist:\nPart 5'
+show_population[3, 1] = 'Café con aroma de mujer:\nSeason 1'
+show_population[4, 1] = 'Maid:\nLimited Series'
+show_population[5, 1] = 'Sex Education:\nSeason 3'
+
+#Custom the colors for both bars
+Bar_one <- Bar_one + scale_fill_manual(values = c(
+  'North Korea' = 'green',
+  'Spain' = 'brown',
+  'Colombia' = 'orange',
+  'United States' = 'lightblue',
+  'LGBTQ+' = 'yellow'
+))
+
+Bar_two <- Bar_two + scale_fill_manual(values = c(
+  'North Korea' = 'green',
+  'Spain' = 'brown',
+  'Colombia' = 'orange',
+  'United States' = 'lightblue',
+  'LGBTQ+' = 'yellow'
+))
+
+#Custom order of Bar_two
+show_population$Country <- factor(
+  show_population$Country,
+  levels = c('North Korea', 'Spain', 'Colombia', 'United States', 'LGBTQ+'),)
+
+#Ajust the y-axises value to show the full scale using the scales pakacge
+library(scales)
+Bar_one <- Bar_one +
+  scale_y_continuous(labels = comma)
+Bar_two <- Bar_two +
+  scale_y_continuous(labels = comma)
+
+#Change the names of the x, y-axises
+Bar_one <- Bar_one +
+  labs(title = '',
+       x = '',
+       y = 'Tototal Weekly Hours Viewed')
+Bar_two <- Bar_two +
+  labs(title = '',
+       x = '',
+       y = 'Population')
+#Remove legend from Bar_one
+Bar_one <- Bar_one +
+  theme(legend.position = 'none')
+
+#Ceate another data frame for custom labels
+short_numbers <- show_population
+short_numbers$total_viewed = as.character(as.numeric(short_numbers$total_viewed))
+short_numbers$Population = as.character(as.numeric(short_numbers$Population))
+short_numbers[1, 5] = 'Population 51.8M\n0.67% of World Pop.'
+short_numbers[2, 5] = 'Population 47.4M\n0.61% of World Pop.'
+short_numbers[3, 5] = 'Population 50.9M\n0.66% of World Pop.'
+short_numbers[4, 5] = 'Population 329.5M\n0.61% of World Pop.'
+short_numbers[5, 5] = 'Population 698.5M\n9.00% of World Pop.'
+short_numbers[1, 2] = '2.3B'
+short_numbers[2, 2] = '905.2M'
+short_numbers[3, 2] = '663.2M'
+short_numbers[4, 2] = '655.5M'
+short_numbers[5, 2] = '447.8M'
+Bar_one <- Bar_one + geom_text(data = show_population,
+                   mapping = aes(x = show_title,
+                                 y = total_viewed,
+                                 label = short_numbers$total_viewed),
+                   size = 5,
+                   vjust = 1.5)
+Bar_two <- Bar_two + geom_text(data = show_population,
+                               mapping = aes(x = Country,
+                                             y = Population,
+                                             label = short_numbers$Population),
+                               size = 3.5,
+                               vjust = 1.5)
+#Add a title to bar_one
+Bar_one <- Bar_one +
+  ggtitle('Population and Popular Netflix Shows Comparison') +
+  theme(plot.title = element_text(color = 'black', size = '18', face = 'bold', vjust = 2))
+
+Bar_two <- Bar_two +
+  ggtitle('World Population: 7.8 Billions') + 
+  theme(plot.title = element_text(vjust = -1.5, hjust = 1))
+  
+
+#Merge the the bar chards together using patchwork package
+install.packages("patchwork")
+library("patchwork")
+Population_vs_Netflix_shows <- Bar_one + Bar_two
